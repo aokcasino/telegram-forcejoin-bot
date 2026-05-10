@@ -1,11 +1,12 @@
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_ID = 5242660904
 
 AOKBET_CHANNEL_ID = -1002742597937
 AOKBET_LINK = "https://t.me/+4tUnDFWg4gVlM2Q0"
@@ -14,6 +15,7 @@ CLUB_PRIVE_LINK = "https://t.me/+eP4JoJiX8qU3ZmZk"
 
 WELCOME_IMAGE = "welcome.jpg"
 TRACKING_FILE = "visitors.json"
+CLICK_COOLDOWN_SECONDS = 20
 
 
 def load_tracking():
@@ -51,8 +53,36 @@ def track_user(user, action):
     save_tracking(data)
 
 
+async def reminder_job(context: ContextTypes.DEFAULT_TYPE):
+    job_data = context.job.data
+    user_id = job_data["user_id"]
+
+    data = load_tracking()
+    user = data.get(str(user_id), {})
+
+    if user.get("last_action") != "club_prive_unlocked":
+        await context.bot.send_message(
+            chat_id=user_id,
+            text=(
+                "👀 Tu n’as pas encore débloqué ton accès au Club Privé.\n\n"
+                "Rejoins AokBet puis clique sur « ✅ J’ai rejoint AokBet » pour recevoir le lien 🔥"
+            ),
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔥 Rejoindre AokBet", url=AOKBET_LINK)],
+                [InlineKeyboardButton("✅ J’ai rejoint AokBet", callback_data="check_join")]
+            ])
+        )
+
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     track_user(update.effective_user, "start")
+
+    context.job_queue.run_once(
+        reminder_job,
+        when=600,
+        data={"user_id": update.effective_user.id},
+        name=f"reminder_{update.effective_user.id}"
+    )
 
     keyboard = [
         [InlineKeyboardButton("🔥 Rejoindre AokBet", url=AOKBET_LINK)],
@@ -91,6 +121,22 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def check_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = query.from_user.id
+    data = load_tracking()
+    user_data = data.get(str(user_id), {})
+
+    last_click = user_data.get("last_check_click")
+    if last_click:
+        last_click_dt = datetime.fromisoformat(last_click)
+        if datetime.now() - last_click_dt < timedelta(seconds=CLICK_COOLDOWN_SECONDS):
+            await query.answer(
+                "Patiente quelques secondes avant de recliquer ⏳",
+                show_alert=True
+            )
+            return
+
+    user_data["last_check_click"] = datetime.now().isoformat()
+    data[str(user_id)] = user_data
+    save_tracking(data)
 
     track_user(query.from_user, "clicked_check_join")
 
@@ -104,7 +150,9 @@ async def check_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "✅ Accès validé 😈🔥\n\n"
                 "Bienvenue dans le Club Privé FR 🔥\n"
                 "Les exclus t’attendent ici 👇\n\n"
-                f"{CLUB_PRIVE_LINK}"
+                f"{CLUB_PRIVE_LINK}\n\n"
+                "⚽🎾 Et pour les vrais picks rentables :\n"
+                "le VIP AokBet est seulement à 10€/mois avec plusieurs pronos par jour 💰"
             )
         else:
             track_user(query.from_user, "failed_not_in_aokbet")
@@ -125,6 +173,10 @@ async def check_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("⛔ Accès refusé.")
+        return
+
     data = load_tracking()
 
     total = len(data)
