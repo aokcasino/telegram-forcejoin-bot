@@ -1,7 +1,9 @@
+import os
+
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
-BOT_TOKEN = "8542071255:AAFt29MyIA2Lj8PxIVF4tyjGuQfnofuySr4"
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 AOKBET_CHANNEL_ID = -1002742597937
 AOKBET_LINK = "https://t.me/+4tUnDFWg4gVlM2Q0"
