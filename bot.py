@@ -14,20 +14,22 @@ WELCOME_IMAGE = "welcome.jpg"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton("🔥 Rejoindre AokBet pour débloquer", url=AOKBET_LINK)],
-        [InlineKeyboardButton("✅ J’ai rejoint", callback_data="check_join")]
+        [InlineKeyboardButton("🔥 Rejoindre AokBet", url=AOKBET_LINK)],
+        [InlineKeyboardButton("✅ J’ai rejoint AokBet", callback_data="check_join")]
     ]
 
     caption = (
-        "🔥 CLUB PRIVÉ FR 🔞\n\n"
-        "Tu veux accéder aux exclus, drops privés et contenus réservés ? 👀😈\n\n"
-        "Pour débloquer l’accès au Club Privé, rejoins d’abord notre canal principal AokBet 👇\n\n"
-        "🎾 Pronos offerts\n"
-        "📊 Analyses sportives\n"
-        "💸 Grosses cotes & résultats\n"
-        "🎁 Accès VIP & contenus exclusifs\n\n"
-        "⚠️ L’accès au Club Privé est réservé aux membres AokBet.\n\n"
-        "Une fois AokBet rejoint, clique sur « ✅ J’ai rejoint » 🔥"
+        "🔥 ACCÈS CLUB PRIVÉ FR 🔥\n\n"
+        "Le contenu qui tourne partout sur Twitter est ici 😈👇\n\n"
+        "📸 Exclus FR privés\n"
+        "💎 Contenus réservés\n"
+        "🔥 Daily drops & pépites privées\n"
+        "🚨 Accès réservé aux membres validés\n\n"
+        "Avant de débloquer le Club Privé, rejoins d’abord notre canal principal AokBet ⚽🎾\n\n"
+        "📊 Pronostics gratuits chaque jour\n"
+        "🎯 Analyses Football & Tennis\n"
+        "💰 Résultats et grosses cotes\n\n"
+        "👇 Rejoins AokBet puis clique sur « ✅ J’ai rejoint AokBet »"
     )
 
     try:
@@ -54,7 +56,7 @@ async def check_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if member.status in ["member", "administrator", "creator"]:
             await query.message.reply_text(
                 "✅ Accès validé 😈🔥\n\n"
-                "Bienvenue dans le Club Privé FR 🔞\n"
+                "Bienvenue dans le Club Privé FR 🔥\n"
                 "Les exclus t’attendent ici 👇\n\n"
                 f"{CLUB_PRIVE_LINK}"
             )
