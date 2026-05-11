@@ -31,6 +31,13 @@ def save_tracking(data):
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
+def is_today(iso_time):
+    try:
+        return datetime.fromisoformat(iso_time).date() == datetime.now().date()
+    except Exception:
+        return False
+
+
 def track_user(user, action):
     data = load_tracking()
     user_id = str(user.id)
@@ -96,7 +103,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "💎 Contenus réservés\n"
         "🔥 Daily drops & pépites privées\n"
         "🚨 Accès réservé aux membres validés\n\n"
-        "Avant de débloquer le Club Privé, rejoins d’abord notre canal principal AokBet ⚽🎾\n\n"
+        "Avant de débloquer le Club Privé, rejoins d’abord le canal AokBet ⚽🎾\n\n"
         "📊 Pronostics gratuits chaque jour\n"
         "🎯 Analyses Football & Tennis\n"
         "💰 Résultats et grosses cotes\n\n"
@@ -178,24 +185,32 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     data = load_tracking()
+    today_users = set()
+    checked = 0
+    unlocked = 0
+    failed = 0
 
-    total = len(data)
-    checked = sum(
-        1 for u in data.values()
-        if any(a["action"] == "clicked_check_join" for a in u.get("actions", []))
-    )
-    unlocked = sum(
-        1 for u in data.values()
-        if any(a["action"] == "club_prive_unlocked" for a in u.get("actions", []))
-    )
-    failed = sum(
-        1 for u in data.values()
-        if any(a["action"] == "failed_not_in_aokbet" for a in u.get("actions", []))
-    )
+    for user_id, user_data in data.items():
+        actions_today = [
+            a for a in user_data.get("actions", [])
+            if is_today(a.get("time"))
+        ]
+
+        if actions_today:
+            today_users.add(user_id)
+
+        if any(a["action"] == "clicked_check_join" for a in actions_today):
+            checked += 1
+
+        if any(a["action"] == "club_prive_unlocked" for a in actions_today):
+            unlocked += 1
+
+        if any(a["action"] == "failed_not_in_aokbet" for a in actions_today):
+            failed += 1
 
     await update.message.reply_text(
-        "📊 Stats bot\n\n"
-        f"👀 Visiteurs /start : {total}\n"
+        "📊 Stats du jour\n\n"
+        f"👀 Visiteurs aujourd’hui : {len(today_users)}\n"
         f"✅ Clics vérification : {checked}\n"
         f"🔓 Accès Club débloqués : {unlocked}\n"
         f"❌ Refusés pas encore AokBet : {failed}"
