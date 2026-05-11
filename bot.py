@@ -90,17 +90,23 @@ async def activate_alerts_button(update: Update, context: ContextTypes.DEFAULT_T
 
     await query.answer("Alertes privées activées 🔔", show_alert=True)
 
-    await query.message.reply_text(
-        "✅ Alertes privées activées 🔔🔥\n\n"
-        "Tu fais maintenant partie des membres du bot AokBet.\n\n"
-        "Tu pourras recevoir en privé :\n"
-        "🔥 1 MOIS VIP OFFERT via tirage au sort\n"
-        "💸 20€ OFFERTS IMMÉDIATEMENT\n"
-        "⚽ Combinés exclusifs\n"
-        "🎾 Leaks tennis rentables\n"
-        "🚨 Grosses alertes live\n\n"
-        "Reste connecté, certains bets ne seront envoyés qu’ici 😈"
-    )
+    try:
+        await context.bot.send_message(
+            chat_id=query.from_user.id,
+            text=(
+                "✅ Alertes privées activées 🔔🔥\n\n"
+                "Tu fais maintenant partie des membres du bot AokBet.\n\n"
+                "Tu pourras recevoir en privé :\n"
+                "🔥 1 MOIS VIP OFFERT via tirage au sort\n"
+                "💸 20€ OFFERTS IMMÉDIATEMENT\n"
+                "⚽ Combinés exclusifs\n"
+                "🎾 Leaks tennis rentables\n"
+                "🚨 Grosses alertes live\n\n"
+                "Reste connecté, certains bets ne seront envoyés qu’ici 😈"
+            )
+        )
+    except Exception as e:
+        print("Impossible d’envoyer le DM :", e)
 
 
 async def alerts(update: Update, context: ContextTypes.DEFAULT_TYPE):
