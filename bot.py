@@ -84,6 +84,25 @@ def set_alerts_enabled(user):
     save_tracking(data)
 
 
+async def activate_alerts_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    set_alerts_enabled(query.from_user)
+
+    await query.answer("Alertes privées activées 🔔", show_alert=True)
+
+    await query.message.reply_text(
+        "✅ Alertes privées activées 🔔🔥\n\n"
+        "Tu fais maintenant partie des membres du bot AokBet.\n\n"
+        "Tu pourras recevoir en privé :\n"
+        "🔥 1 MOIS VIP OFFERT via tirage au sort\n"
+        "💸 20€ OFFERTS IMMÉDIATEMENT\n"
+        "⚽ Combinés exclusifs\n"
+        "🎾 Leaks tennis rentables\n"
+        "🚨 Grosses alertes live\n\n"
+        "Reste connecté, certains bets ne seront envoyés qu’ici 😈"
+    )
+
+
 async def alerts(update: Update, context: ContextTypes.DEFAULT_TYPE):
     set_alerts_enabled(update.effective_user)
 
@@ -98,6 +117,35 @@ async def alerts(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🚨 Grosses alertes live\n\n"
         "Reste connecté, certains bets ne seront envoyés qu’ici 😈"
     )
+
+
+async def alertpost(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("⛔ Accès refusé.")
+        return
+
+    text = (
+        "🚨 BOT PRIVÉ AOKBET 🚨\n\n"
+        "Les membres du bot reçoivent :\n\n"
+        "🔥 1 MOIS VIP OFFERT\n"
+        "💸 20€ OFFERTS IMMÉDIATEMENT\n"
+        "⚽ Combinés exclusifs\n"
+        "🎾 Leaks tennis rentables\n\n"
+        "⚠️ Certains gros bets / live seront envoyés UNIQUEMENT sur le bot privé.\n\n"
+        "👇 Active ton accès maintenant :"
+    )
+
+    keyboard = [
+        [InlineKeyboardButton("🔔 Activer les alertes privées", callback_data="activate_alerts")]
+    ]
+
+    await context.bot.send_message(
+        chat_id=AOKBET_CHANNEL_ID,
+        text=text,
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+    await update.message.reply_text("✅ Post envoyé dans AokBet avec bouton.")
 
 
 async def reminder_job(context: ContextTypes.DEFAULT_TYPE):
@@ -263,8 +311,11 @@ app = ApplicationBuilder().token(BOT_TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("alerts", alerts))
+app.add_handler(CommandHandler("alertpost", alertpost))
 app.add_handler(CommandHandler("stats", stats))
+
 app.add_handler(CallbackQueryHandler(check_join, pattern="check_join"))
+app.add_handler(CallbackQueryHandler(activate_alerts_button, pattern="activate_alerts"))
 
 print("Bot lancé...")
 app.run_polling()
