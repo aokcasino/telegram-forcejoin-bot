@@ -8,6 +8,8 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = 5242660904
 
+BOT_LINK_ALERTS = "https://t.me/AookkBot?start=alerts"
+
 AOKBET_CHANNEL_ID = -1002742597937
 AOKBET_LINK = "https://t.me/+4tUnDFWg4gVlM2Q0"
 
@@ -84,32 +86,7 @@ def set_alerts_enabled(user):
     save_tracking(data)
 
 
-async def activate_alerts_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    set_alerts_enabled(query.from_user)
-
-    await query.answer("Alertes privées activées 🔔", show_alert=True)
-
-    try:
-        await context.bot.send_message(
-            chat_id=query.from_user.id,
-            text=(
-                "✅ Alertes privées activées 🔔🔥\n\n"
-                "Tu fais maintenant partie des membres du bot AokBet.\n\n"
-                "Tu pourras recevoir en privé :\n"
-                "🔥 1 MOIS VIP OFFERT via tirage au sort\n"
-                "💸 20€ OFFERTS IMMÉDIATEMENT\n"
-                "⚽ Combinés exclusifs\n"
-                "🎾 Leaks tennis rentables\n"
-                "🚨 Grosses alertes live\n\n"
-                "Reste connecté, certains bets ne seront envoyés qu’ici 😈"
-            )
-        )
-    except Exception as e:
-        print("Impossible d’envoyer le DM :", e)
-
-
-async def alerts(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def send_alerts_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     set_alerts_enabled(update.effective_user)
 
     await update.message.reply_text(
@@ -123,6 +100,10 @@ async def alerts(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🚨 Grosses alertes live\n\n"
         "Reste connecté, certains bets ne seront envoyés qu’ici 😈"
     )
+
+
+async def alerts(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await send_alerts_confirmation(update, context)
 
 
 async def alertpost(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -142,7 +123,7 @@ async def alertpost(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     keyboard = [
-        [InlineKeyboardButton("🔔 Activer les alertes privées", callback_data="activate_alerts")]
+        [InlineKeyboardButton("🔔 Activer les alertes privées", url=BOT_LINK_ALERTS)]
     ]
 
     await context.bot.send_message(
@@ -151,7 +132,7 @@ async def alertpost(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
-    await update.message.reply_text("✅ Post envoyé dans AokBet avec bouton.")
+    await update.message.reply_text("✅ Post envoyé dans AokBet avec bouton privé.")
 
 
 async def reminder_job(context: ContextTypes.DEFAULT_TYPE):
@@ -176,6 +157,10 @@ async def reminder_job(context: ContextTypes.DEFAULT_TYPE):
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if context.args and context.args[0] == "alerts":
+        await send_alerts_confirmation(update, context)
+        return
+
     track_user(update.effective_user, "start")
 
     context.job_queue.run_once(
@@ -327,11 +312,7 @@ async def members(update: Update, context: ContextTypes.DEFAULT_TYPE):
             first_name = user_data.get("first_name") or "Sans prénom"
             activated_at = user_data.get("alerts_enabled_at", "Date inconnue")
 
-            if username:
-                display = f"@{username}"
-            else:
-                display = first_name
-
+            display = f"@{username}" if username else first_name
             members_list.append((activated_at, display, user_id))
 
     if not members_list:
@@ -361,7 +342,6 @@ app.add_handler(CommandHandler("stats", stats))
 app.add_handler(CommandHandler("members", members))
 
 app.add_handler(CallbackQueryHandler(check_join, pattern="check_join"))
-app.add_handler(CallbackQueryHandler(activate_alerts_button, pattern="activate_alerts"))
 
 print("Bot lancé...")
 app.run_polling()
