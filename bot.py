@@ -106,6 +106,40 @@ async def alerts(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_alerts_confirmation(update, context)
 
 
+async def bonus(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                "💸 40€ OFFERTS IMMÉDIATEMENT",
+                url="https://affiliates.winshare-hub.com/click?campaign_id=12&ref_id=43"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                "🔥 35€ + CASHBACK",
+                url="https://affiliates.winshare-hub.com/click?campaign_id=16&ref_id=43"
+            )
+        ]
+    ]
+
+    await update.message.reply_text(
+        "🚨 BONUS EXCLUSIFS AOKBET 🚨\n\n"
+        "J’ai sélectionné les 2 offres les plus intéressantes du moment pour booster votre bankroll dès l’inscription 👀👇\n\n"
+        "🎁 1BET7\n"
+        "💸 40€ OFFERTS IMMÉDIATEMENT\n"
+        "🔥 Double ton bankroll dès le départ\n"
+        "⚡ Activation rapide\n"
+        "📈 Cotes boostées chaque jour\n\n"
+        "💎 PRESTIGE CASINO\n"
+        "💸 35€ offerts + cashback chaque semaine\n"
+        "🔥 Jusqu’à 85€ pour jouer\n"
+        "⚡ Inscription rapide\n"
+        "📈 Cotes boostées chaque jour\n\n"
+        "⚠️ Les offres peuvent changer rapidement, profitez-en tant qu’elles sont encore disponibles 👀",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+
 async def alertpost(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         await update.message.reply_text("⛔ Accès refusé.")
@@ -337,6 +371,7 @@ app = ApplicationBuilder().token(BOT_TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("alerts", alerts))
+app.add_handler(CommandHandler("bonus", bonus))
 app.add_handler(CommandHandler("alertpost", alertpost))
 app.add_handler(CommandHandler("stats", stats))
 app.add_handler(CommandHandler("members", members))
