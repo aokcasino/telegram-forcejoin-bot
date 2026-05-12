@@ -313,12 +313,52 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def members(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("⛔ Accès refusé.")
+        return
+
+    data = load_tracking()
+    members_list = []
+
+    for user_id, user_data in data.items():
+        if user_data.get("alerts_enabled"):
+            username = user_data.get("username")
+            first_name = user_data.get("first_name") or "Sans prénom"
+            activated_at = user_data.get("alerts_enabled_at", "Date inconnue")
+
+            if username:
+                display = f"@{username}"
+            else:
+                display = first_name
+
+            members_list.append((activated_at, display, user_id))
+
+    if not members_list:
+        await update.message.reply_text("Aucun membre alertes.")
+        return
+
+    members_list.sort(reverse=True)
+
+    text = "📩 Membres alertes activées :\n\n"
+
+    for activated_at, display, user_id in members_list[:50]:
+        date_short = activated_at[:16].replace("T", " ")
+        text += f"• {display} — {date_short}\n"
+
+    if len(members_list) > 50:
+        text += f"\n+ {len(members_list) - 50} autres membres."
+
+    await update.message.reply_text(text)
+
+
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("alerts", alerts))
 app.add_handler(CommandHandler("alertpost", alertpost))
 app.add_handler(CommandHandler("stats", stats))
+app.add_handler(CommandHandler("members", members))
 
 app.add_handler(CallbackQueryHandler(check_join, pattern="check_join"))
 app.add_handler(CallbackQueryHandler(activate_alerts_button, pattern="activate_alerts"))
